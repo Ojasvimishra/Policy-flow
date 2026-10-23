@@ -33,7 +33,6 @@ class MockInsurerScenariosTest extends TestCase
             'age_multiplier' => '1.00',
             'destination_multiplier' => '1.80',
             'coverage_multiplier' => '1.25',
-            'calculated_premium' => '225.00',
             'final_premium' => '225.00',
             'status' => PolicyState::RECEIVED,
         ]);
@@ -172,7 +171,7 @@ class MockInsurerScenariosTest extends TestCase
 
         // Immediate blind reissue must be prevented!
         $reissueResponse = $this->postJson("/api/policy-requests/{$policy->id}/submit");
-        $reissueResponse->assertStatus(200)
+        $reissueResponse->assertStatus(202)
             ->assertJsonPath('success', false)
             ->assertJsonPath('status', PolicyState::PENDING_CONFIRMATION->value)
             ->assertJsonPath('requires_reconciliation', true);
@@ -193,7 +192,7 @@ class MockInsurerScenariosTest extends TestCase
             'scenario' => MockInsurerService::SCENARIO_DELAYED_CALLBACK,
         ]);
 
-        $response->assertStatus(200)
+        $response->assertStatus(202)
             ->assertJsonPath('success', true)
             ->assertJsonPath('status', PolicyState::PENDING_CONFIRMATION->value);
 

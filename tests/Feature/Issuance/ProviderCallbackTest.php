@@ -32,7 +32,6 @@ class ProviderCallbackTest extends TestCase
             'age_multiplier' => '1.00',
             'destination_multiplier' => '1.00',
             'coverage_multiplier' => '1.00',
-            'calculated_premium' => '75.00',
             'final_premium' => '75.00',
             'status' => PolicyState::PENDING_CONFIRMATION,
             'provider_reference' => 'PRV-REF-CB-1234',

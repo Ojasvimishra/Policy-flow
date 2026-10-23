@@ -125,16 +125,7 @@ class PolicyRequestController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($perPage);
 
-        return PolicyRequestResource::collection($paginator)
-            ->additional([
-                'meta' => [
-                    'current_page' => $paginator->currentPage(),
-                    'per_page' => $paginator->perPage(),
-                    'total' => $paginator->total(),
-                    'last_page' => $paginator->lastPage(),
-                ],
-            ])
-            ->response();
+        return PolicyRequestResource::collection($paginator)->response();
     }
 
     /**

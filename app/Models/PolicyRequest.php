@@ -60,6 +60,15 @@ class PolicyRequest extends Model
         'travel_days',
         'plan_code',
         'sum_insured',
+        'base_daily_rate',
+        'age_multiplier',
+        'destination_multiplier',
+        'coverage_multiplier',
+        'final_premium',
+        'status',
+        'policy_number',
+        'provider_reference',
+        'attempt_count',
         'metadata',
     ];
 
