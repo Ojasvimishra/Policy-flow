@@ -40,8 +40,8 @@ In real-world insurance distribution, external insurer APIs are notoriously vola
 
 ```
 [X] Phase 0: Project Foundation, Architecture & Environment Setup  ──▶ COMPLETED
-[ ] Phase 1: Database Implementation & Domain Core                 ──▶ NEXT (Backlog Ready)
-[ ] Phase 2: Policy Intake, Validation, Pricing & Idempotency      ──▶ Planned
+[X] Phase 1: Database Implementation & Domain Core                 ──▶ COMPLETED
+[ ] Phase 2: Policy Intake, Validation, Pricing & Idempotency      ──▶ NEXT (Backlog Ready)
 [ ] Phase 3: Issuance Engine, Mock Insurer, Callbacks & Recon      ──▶ Planned
 [ ] Phase 4: Frontend & Operational User Experience                ──▶ Planned
 [ ] Phase 5: Integration & Reliability Hardening                   ──▶ Planned
@@ -50,7 +50,7 @@ In real-world insurance distribution, external insurer APIs are notoriously vola
 [ ] Phase 8: Final Acceptance, Demonstration & Submission          ──▶ Planned
 ```
 
-> **Notice**: As per Phase 0 completion criteria, the architectural foundation, schema blueprint, Docker Compose specification, ADRs, and roadmap are fully established. Full business execution begins in Phase 1.
+> **Notice**: Database migrations, Eloquent models, state machine enum, `PolicyStateTransitionService`, and automated schema constraint tests are implemented and verified. Ready for Phase 2.
 
 ---
 

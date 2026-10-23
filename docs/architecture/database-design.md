@@ -135,3 +135,53 @@ UNIQUE (provider, event_id);
 | `NEEDS_RECONCILIATION` | `ISSUED`, `FAILED`, `SUBMITTED` (retry) | Automated reconciliation job or operator intervention. |
 | `ISSUED` | **[TERMINAL STATE]** | **No transitions allowed.** Any attempt to overwrite `ISSUED` with `SUBMITTED`, `FAILED`, etc. is rejected. |
 | `FAILED` | `SUBMITTED` (Only if retriable failure explicitly allowed) | Strict condition: must preserve original premium snapshot. |
+
+---
+
+## 5. Phase 1 Implementation & Verification Evidence
+
+### Implemented Migration Files
+1. `database/migrations/2026_10_23_000001_create_policy_requests_table.php`
+   - Enforces `UNIQUE (agent_id, client_request_id)` for atomic intake idempotency.
+   - Enforces `UNIQUE (policy_number)` (nullable) to prevent multi-issuance.
+   - Uses `DECIMAL(12,2)` / `DECIMAL(10,2)` for fixed monetary precision.
+2. `database/migrations/2026_10_23_000002_create_issuance_attempts_table.php`
+   - Foreign key to `policy_requests(id)` with `CASCADE ON DELETE`.
+   - Enforces `UNIQUE (policy_request_id, attempt_number)`.
+3. `database/migrations/2026_10_23_000003_create_provider_events_table.php`
+   - Enforces `UNIQUE (provider, event_id)` for webhook deduplication.
+   - Nullable foreign key to `policy_requests(id)` with `SET NULL ON DELETE`.
+4. `database/migrations/2026_10_23_000004_create_policy_state_history_table.php`
+   - Append-only audit log with `created_at` timestamp.
+   - Compound index on `(policy_request_id, created_at)`.
+5. `database/migrations/2026_10_23_000005_create_mock_insurer_policies_table.php`
+   - Isolated simulated provider table preventing test artifacts from polluting business ledger.
+   - Enforces `UNIQUE (client_request_id)` and `UNIQUE (policy_number)`.
+
+### Live Constraint Verification (Automated Script: `scripts/test_schema_constraints.sh`)
+```text
+==========================================================
+ PolicyFlow - Phase 1 Schema & Constraints Live Verification
+==========================================================
+[*] Step 1: Executing DDL migrations...
+  [✓] All 5 tables created successfully.
+[*] Step 2: Testing valid policy insertion with pricing snapshot...
+  [✓] Valid policy inserted (ID 1, status VALIDATED, premium 225.00).
+[*] Step 3: Testing duplicate (agent_id, client_request_id) constraint rejection...
+  [✓] PASS: Duplicate (agent_id, client_request_id) rejected by database.
+[*] Step 4: Testing global policy_number uniqueness constraint...
+  [✓] PASS: Duplicate policy_number rejected by database.
+[*] Step 5: Testing (policy_request_id, attempt_number) uniqueness...
+  [✓] PASS: Duplicate attempt_number for same policy rejected by database.
+[*] Step 6: Testing (provider, event_id) webhook deduplication...
+  [✓] PASS: Duplicate (provider, event_id) rejected by database.
+[*] Step 7: Testing foreign key CASCADE delete...
+  [✓] PASS: Child attempts automatically cascaded on parent policy deletion.
+[*] Step 8: Testing mock insurer isolated provider uniqueness...
+  [✓] PASS: Duplicate provider policy for same client_request_id rejected.
+
+==========================================================
+ All 8 database integrity & constraint tests PASSED cleanly!
+==========================================================
+```
+
