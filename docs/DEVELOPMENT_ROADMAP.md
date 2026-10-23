@@ -99,37 +99,41 @@ This roadmap formalizes the end-to-end engineering plan for **PolicyFlow**, a fa
 
 ---
 
-## Phase 3: Issuance Engine, Mock Insurer, Callbacks & Reconciliation
+## Phase 3: Issuance Engine, Mock Insurer, Callbacks & Reconciliation [COMPLETED]
+- **Status**: Completed & Verified (Commit `Phase 3`)
 - **Objective**: Implement deterministic mock insurer, issuance orchestration, timeout handling, webhook callback processing, and status reconciliation.
 - **Scope**:
   - Deterministic Mock Insurer supporting scenarios: `SUCCESS`, `TEMPORARY_FAILURE`, `TIMEOUT_AFTER_ISSUE`, `DELAYED_CALLBACK`, `DUPLICATE_CALLBACK`.
-  - `POST /api/policy-requests/{id}/submit` endpoint and `SubmitPolicyForIssuance` job.
+  - `POST /api/policy-requests/{id}/submit` endpoint with two-phase reservation/execution pattern.
   - Safe timeout handling transitioning to `PENDING_CONFIRMATION` without blind reissuance.
-  - `POST /api/mock-insurer/callback` webhook endpoint with deduplication.
+  - `POST /api/mock-insurer/callback` webhook endpoint with deduplication on `(provider, event_id)`.
   - `ReconciliationService` and `policyflow:reconcile` artisan command.
 - **Dependencies**: Phase 1 & 2.
-- **Ordered Tasks**:
-  1. Build internal Mock Insurer routes and controller with isolated table storage.
-  2. Implement `IssuanceOrchestrator` managing attempts and insurer HTTP client.
-  3. Implement `ProviderCallbackService` with event deduplication.
-  4. Implement `ReconciliationService` for querying provider status.
-  5. Wire Redis queue jobs for asynchronous execution.
-  6. Write automated tests for timeout recovery and duplicate callback handling.
+- **Completed Tasks**:
+  1. Built internal Mock Insurer routes (`/api/mock-insurer/issue`, `/api/mock-insurer/status/{client_request_id}`) and controller with isolated `mock_insurer_policies` table storage.
+  2. Implemented `IssuanceOrchestrator` managing attempts, two-phase DB transactions, sequential `attempt_number` tracking, and mock insurer invocation outside the transaction.
+  3. Implemented `ProviderCallbackService` and `MockInsurerCallbackController` with strict deduplication on `(provider, event_id)` protecting against terminal `ISSUED` regression.
+  4. Implemented `ReconciliationService` and `ReconcileStalePolicies` console command (`policyflow:reconcile`) for resolving uncertain or timed-out policies.
+  5. Built automated test suites in `tests/Feature/Issuance/` and `tests/Feature/Reconciliation/`.
+  6. Verified all 5 scenarios, attempt tracking, timeout safety, callback deduplication, and reconciliation via `scripts/verify_phase3_issuance_and_reconciliation.py` (23/23 tests passing).
 - **Expected Files**:
-  - `app/Services/MockInsurer/*`
+  - `app/Services/MockInsurer/MockInsurerService.php`
+  - `app/Http/Controllers/Api/MockInsurerController.php`
+  - `app/Http/Controllers/Api/MockInsurerCallbackController.php`
   - `app/Services/IssuanceOrchestrator.php`
   - `app/Services/ProviderCallbackService.php`
   - `app/Services/ReconciliationService.php`
   - `app/Console/Commands/ReconcileStalePolicies.php`
-  - `tests/Feature/Issuance/TimeoutAfterIssueRecoveryTest.php`
-  - `tests/Feature/Callback/WebhookCallbackDeduplicationTest.php`
-- **Database Changes**: None.
+  - `tests/Feature/Issuance/MockInsurerScenariosTest.php`
+  - `tests/Feature/Issuance/ProviderCallbackTest.php`
+  - `tests/Feature/Reconciliation/ReconciliationCommandTest.php`
+  - `scripts/verify_phase3_issuance_and_reconciliation.py`
+- **Database Changes**: Schema established in Phase 1; all 5 tables and compound uniqueness constraints utilized.
 - **Backend Work**: Orchestration, mock endpoints, callbacks, and scheduled reconciliation.
-- **Frontend Work**: None.
-- **Tests**: Mock scenario tests, timeout recovery tests, callback deduplication tests.
-- **Acceptance Criteria**: Guaranteed single policy number per request; timeout recovers safely via reconciliation without duplicate issuance; duplicated callbacks processed once.
+- **Frontend Work**: None (Phase 4 scope).
+- **Tests**: Mock scenario tests, timeout recovery tests, callback deduplication tests, reconciliation tests.
+- **Acceptance Criteria**: Guaranteed single policy number per request; timeout recovers safely via reconciliation without duplicate issuance; duplicated callbacks processed once without duplicate side-effects.
 - **Definition of Done**: All five required reliability scenarios tested and confirmed.
-- **Estimated Effort**: 2.5–3 hours.
 - **Handoff to Phase 4**: Issuance engine and API complete, ready for operational frontend integration.
 
 ---

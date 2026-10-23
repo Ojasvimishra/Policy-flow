@@ -12,12 +12,14 @@ use App\Services\PolicyIntakeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use App\Services\IssuanceOrchestrator;
 use Illuminate\Support\Facades\Validator;
 
 class PolicyRequestController extends Controller
 {
     public function __construct(
-        protected PolicyIntakeService $intakeService
+        protected PolicyIntakeService $intakeService,
+        protected IssuanceOrchestrator $orchestrator
     ) {}
 
     /**
@@ -133,5 +135,37 @@ class PolicyRequestController extends Controller
                 ],
             ])
             ->response();
+    }
+
+    /**
+     * POST /api/policy-requests/{id}/submit
+     * Dispatches policy request to insurer for issuance.
+     */
+    public function submit(Request $request, int|string $id): JsonResponse
+    {
+        $scenario = $request->header('X-Mock-Scenario')
+            ?? $request->input('scenario');
+
+        try {
+            $result = $this->orchestrator->submit($id, $scenario ? (string) $scenario : null);
+
+            $status = $result['status'] ?? 'UNKNOWN';
+            $httpCode = match ($status) {
+                'ISSUED' => 200,
+                'PENDING_CONFIRMATION' => 202,
+                'FAILED' => 503,
+                default => 200,
+            };
+
+            return response()->json($result, $httpCode);
+        } catch (\DomainException $e) {
+            $code = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 422;
+            return response()->json([
+                'error' => [
+                    'code' => 'SUBMISSION_ERROR',
+                    'message' => $e->getMessage(),
+                ],
+            ], $code);
+        }
     }
 }

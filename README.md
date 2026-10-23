@@ -42,15 +42,15 @@ In real-world insurance distribution, external insurer APIs are notoriously vola
 [X] Phase 0: Project Foundation, Architecture & Environment Setup  ──▶ COMPLETED
 [X] Phase 1: Database Implementation & Domain Core                 ──▶ COMPLETED
 [X] Phase 2: Policy Intake, Validation, Pricing & Idempotency      ──▶ COMPLETED
-[ ] Phase 3: Issuance Engine, Mock Insurer, Callbacks & Recon      ──▶ NEXT (Backlog Ready)
-[ ] Phase 4: Frontend & Operational User Experience                ──▶ Planned
+[X] Phase 3: Issuance Engine, Mock Insurer, Callbacks & Recon      ──▶ COMPLETED
+[ ] Phase 4: Frontend & Operational User Experience                ──▶ NEXT (Phase 4 Ready)
 [ ] Phase 5: Integration & Reliability Hardening                   ──▶ Planned
 [ ] Phase 6: Automated Testing, Security & Quality Verification    ──▶ Planned
 [ ] Phase 7: Documentation Completion & Packaging                  ──▶ Planned
 [ ] Phase 8: Final Acceptance, Demonstration & Submission          ──▶ Planned
 ```
 
-> **Notice**: Deterministic pricing engine, intake validation, immutable pricing snapshot persistence, and atomic intake idempotency are implemented and verified. Ready for Phase 3.
+> **Notice**: Deterministic pricing engine, intake validation, immutable pricing snapshot persistence, atomic intake idempotency, mock insurer scenarios, issuance orchestration, defensive timeout safety, callback deduplication, and reconciliation are implemented and verified. Ready for Phase 4.
 
 ---
 
@@ -191,11 +191,48 @@ php artisan test tests/Feature/Intake/DuplicateIntakeIdempotencyTest.php
 
 PolicyFlow enforces a three-tier defense against duplicate policies:
 1. **Intake Layer**: A database constraint on `UNIQUE (agent_id, client_request_id)` prevents concurrent or repeated intake. A repeated submission performs an atomic lookup and returns HTTP 200 with the existing record and immutable calculated premium.
-2. **Orchestration Layer**: Before calling the insurer, the policy is locked with `lockForUpdate()`. If already `ISSUED` or `IN_FLIGHT`, the call is aborted.
+2. **Orchestration Layer**: Before calling the insurer, the policy is locked with `lockForUpdate()`. If already `ISSUED` or `IN_FLIGHT`, the call is aborted. Sequential attempts are logged in `issuance_attempts` with `UNIQUE(policy_request_id, attempt_number)`.
 3. **Reconciliation on Timeout**: If an insurer call times out, the system marks the status as `PENDING_CONFIRMATION` instead of reissuing. It queries the insurer's `/api/mock-insurer/status` endpoint to confirm whether a policy was created before any subsequent action.
 
 ---
 
-## 9. Known Limitations & Simplifying Assumptions
+## 9. Phase 3 REST API & Reconciliation Reference
+
+### Policy Submission for Issuance
+- **Endpoint**: `POST /api/policy-requests/{id}/submit`
+- **Headers**: `X-Mock-Scenario: SUCCESS | TEMPORARY_FAILURE | TIMEOUT_AFTER_ISSUE | DELAYED_CALLBACK | DUPLICATE_CALLBACK` (optional scenario override for deterministic testing)
+- **Response**: HTTP 200 (Issued), HTTP 202 (Pending confirmation on timeout), or HTTP 503 (Temporary failure, retriable).
+
+### Mock Insurer Gateway
+- **Endpoint**: `POST /api/mock-insurer/issue`
+- **Endpoint**: `GET /api/mock-insurer/status/{client_request_id}`
+
+### Provider Webhook Callback
+- **Endpoint**: `POST /api/mock-insurer/callback`
+- **Payload**:
+  ```json
+  {
+    "provider": "mock_insurer",
+    "event_id": "EVT-MOCK-99901",
+    "event_type": "POLICY_ISSUED",
+    "client_request_id": "AGT-2026-0001",
+    "provider_reference": "PRV-REF-123456",
+    "policy_number": "POL-MOCK-ABC12345",
+    "payload": {
+      "status": "ISSUED"
+    }
+  }
+  ```
+- **Deduplication**: Enforced via DB constraint `UNIQUE (provider, event_id)` on `provider_events`. Replayed events return HTTP 200 with `idempotent_replay: true` and zero state mutations. Terminal `ISSUED` status cannot be regressed by late-arriving failure callbacks.
+
+### Artisan Reconciliation Command
+```bash
+# Reconcile all stale or timed-out policies against insurer records
+php artisan policyflow:reconcile --limit=100
+```
+
+---
+
+## 10. Known Limitations & Simplifying Assumptions
 - **Authentication**: For local evaluation, requests identify the agent via `agent_id` payload; OAuth/JWT authentication is deferred for production hardening.
 - **Mock Insurer Transport**: The mock insurer is hosted locally as an internal sub-service (`/api/mock-insurer`) to eliminate any need for external API credentials or paid cloud sandboxes.
