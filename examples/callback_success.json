@@ -1,0 +1,9 @@
+{
+  "event_id": "EVT-MOCK-2026-8801",
+  "provider": "mock_insurer",
+  "event_type": "POLICY_ISSUED",
+  "client_request_id": "AGT-2026-0001",
+  "policy_number": "POL-2026-7894",
+  "provider_reference": "PRV-REF-109283",
+  "timestamp": "2026-10-23T22:30:00Z"
+}
