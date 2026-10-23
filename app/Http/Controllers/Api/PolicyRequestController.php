@@ -54,7 +54,7 @@ class PolicyRequestController extends Controller
      */
     public function show(int|string $id): JsonResponse
     {
-        $policy = PolicyRequest::find($id);
+        $policy = PolicyRequest::with(['attempts', 'stateHistory', 'providerEvents'])->find($id);
 
         if ($policy === null) {
             return response()->json([

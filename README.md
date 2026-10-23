@@ -43,14 +43,14 @@ In real-world insurance distribution, external insurer APIs are notoriously vola
 [X] Phase 1: Database Implementation & Domain Core                 ──▶ COMPLETED
 [X] Phase 2: Policy Intake, Validation, Pricing & Idempotency      ──▶ COMPLETED
 [X] Phase 3: Issuance Engine, Mock Insurer, Callbacks & Recon      ──▶ COMPLETED
-[ ] Phase 4: Frontend & Operational User Experience                ──▶ NEXT (Phase 4 Ready)
-[ ] Phase 5: Integration & Reliability Hardening                   ──▶ Planned
+[X] Phase 4: Frontend & Operational User Experience                ──▶ COMPLETED
+[ ] Phase 5: Integration & Reliability Hardening                   ──▶ NEXT (Phase 5 Ready)
 [ ] Phase 6: Automated Testing, Security & Quality Verification    ──▶ Planned
 [ ] Phase 7: Documentation Completion & Packaging                  ──▶ Planned
 [ ] Phase 8: Final Acceptance, Demonstration & Submission          ──▶ Planned
 ```
 
-> **Notice**: Deterministic pricing engine, intake validation, immutable pricing snapshot persistence, atomic intake idempotency, mock insurer scenarios, issuance orchestration, defensive timeout safety, callback deduplication, and reconciliation are implemented and verified. Ready for Phase 4.
+> **Notice**: Deterministic pricing engine, intake validation, immutable pricing snapshot persistence, atomic intake idempotency, mock insurer scenarios, issuance orchestration, defensive timeout safety, callback deduplication, reconciliation, and the complete React + TypeScript operational dashboard are implemented and verified. Ready for Phase 5.
 
 ---
 
@@ -143,13 +143,18 @@ Policy-flow/
    php artisan key:generate
    php artisan migrate
    ```
-4. **Start Web Server & Queue Worker**:
+4. **Start Web Server, Queue Worker & Operational Frontend**:
    ```bash
    # Terminal 1: HTTP API Server
    php artisan serve --port=8000
 
    # Terminal 2: Background Queue Worker
    php artisan queue:work redis --queue=issuance,callbacks,reconciliation,default --sleep=3 --tries=3
+
+   # Terminal 3: PolicyFlow Operations Portal (Vite React + TypeScript)
+   cd frontend
+   npm install
+   npm run dev  # Launched at http://localhost:5173
    ```
 
 ---
@@ -157,14 +162,20 @@ Policy-flow/
 ## 6. Running Automated Tests
 
 ```bash
-# Run tests inside Docker
+# Run backend tests inside Docker
 docker compose exec app php artisan test
 
-# Run tests natively
+# Run backend tests natively
 php artisan test
 
-# Run specific feature test
+# Run specific backend feature test
 php artisan test tests/Feature/Intake/DuplicateIntakeIdempotencyTest.php
+
+# Run frontend Vitest test suite (pricing engine, API clients)
+cd frontend && npm test
+
+# Run frontend TypeScript type-checking and production bundle build
+cd frontend && npm run build
 ```
 
 ---

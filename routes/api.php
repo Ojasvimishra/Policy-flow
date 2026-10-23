@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\MockInsurerCallbackController;
 use App\Http\Controllers\Api\MockInsurerController;
+use App\Http\Controllers\Api\OperationsController;
 use App\Http\Controllers\Api\PolicyRequestController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,10 @@ Route::get('/health', function () {
         'timestamp' => now()->toIso8601String(),
     ]);
 });
+
+// Operational Dashboard Metrics & Reconciliation
+Route::get('/dashboard/metrics', [OperationsController::class, 'metrics']);
+Route::post('/operations/reconcile', [OperationsController::class, 'reconcile']);
 
 // Policy Intake, Retrieval, and Issuance Submission Endpoints
 Route::post('/policy-requests', [PolicyRequestController::class, 'store']);

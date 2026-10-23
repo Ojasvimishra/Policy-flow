@@ -42,6 +42,9 @@ class PolicyRequestResource extends JsonResource
             'provider_reference' => $this->provider_reference,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
+            'attempts' => $this->whenLoaded('attempts'),
+            'state_history' => $this->whenLoaded('stateHistory'),
+            'provider_events' => $this->whenLoaded('providerEvents'),
         ];
     }
 }

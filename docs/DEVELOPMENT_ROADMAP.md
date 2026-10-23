@@ -138,31 +138,33 @@ This roadmap formalizes the end-to-end engineering plan for **PolicyFlow**, a fa
 
 ---
 
-## Phase 4: Frontend & Operational User Experience
+## Phase 4: Frontend & Operational User Experience [COMPLETED]
+- **Status**: Completed & Verified (Commit `Phase 4`)
 - **Objective**: Deliver a clean, responsive operational portal in React / TypeScript for policy intake, tracking, timeline inspection, and manual reconciliation.
 - **Scope**:
-  - Vite React frontend in `frontend/`.
-  - Policy intake form with real-time date and plan validation.
-  - Policy list with status filters, search, and pagination.
-  - Policy details view showing attempt timeline, raw provider payloads, and state audit trail.
-  - Trigger buttons for manual submission and reconciliation.
+  - Vite React + TypeScript frontend in `frontend/`.
+  - Design system: PolicyFlow Operations UI with standardized tokens, typography, surfaces, and colors.
+  - Overview Dashboard (`/`): Summary metrics, financial totals, pending confirmation queue, recent requests table.
+  - Policy Request Management (`/policies`): Search & filters (status, agent, destination, plan), server-backed pagination, responsive table, empty states.
+  - Policy Intake Form (`/policies/new`): Guided 4-section form, live dynamic pricing calculation (exact ₹225.00 parity), double-click prevention, timeout safety.
+  - Policy Detail & Lifecycle (`/policies/:id`): Visual lifecycle progression (RECEIVED -> VALIDATED -> SUBMITTED -> ISSUED), customer profile, travel itinerary, coverage snapshot, attempt timeline, state transition ledger, issuance submission with scenario picker.
+  - Operations Console (`/operations`): Pending confirmation queue, failed/retryable queue, live reconciliation pass trigger.
+  - Zero mock business data: Database is single source of truth; empty states when database contains zero records.
 - **Dependencies**: Phase 2 and Phase 3 REST endpoints.
-- **Ordered Tasks**:
-  1. Scaffold React + Vite + Tailwind application in `frontend/`.
-  2. Build typed API client configured via `VITE_API_BASE_URL`.
-  3. Implement Policy Intake form.
-  4. Implement Policy List view with status badges.
-  5. Implement Policy Detail and Timeline component.
-- **Expected Files**:
-  - `frontend/src/*`, `frontend/package.json`, `frontend/vite.config.ts`
-- **Database Changes**: None.
-- **Backend Work**: CORS configuration in `config/cors.php`.
-- **Frontend Work**: UI components, responsive layout, and API integration.
-- **Tests**: Component rendering and intake form validation tests.
-- **Acceptance Criteria**: Real-time form submission communicates with backend; policies and timelines display accurately.
-- **Definition of Done**: Frontend operational portal fully functional against local API.
-- **Estimated Effort**: 2 hours.
-- **Handoff to Phase 5**: End-to-end user experience and backend connected.
+- **Completed Tasks**:
+  1. Scaffolded Vite + React 19 + TypeScript application with strict types and path routing (`react-router-dom`).
+  2. Implemented PolicyFlow Operations UI design tokens and clean responsive CSS system in `src/styles/design-system.css`.
+  3. Built typed API client (`client.ts`, `policies.ts`, `operations.ts`) with normalized error handling and proxy support.
+  4. Built dynamic client-side pricing calculator matching backend math (tested: ₹225.00 reference, age thresholds, inclusive days).
+  5. Implemented all 5 primary pages (`OverviewPage`, `PolicyListPage`, `NewPolicyPage`, `PolicyDetailPage`, `OperationsPage`) plus `NotFoundPage`.
+  6. Added backend endpoints `GET /api/dashboard/metrics` and `POST /api/operations/reconcile` and CORS configuration in `config/cors.php`.
+  7. Verified frontend tests with Vitest (8/8 passing) and TypeScript production build (`npm run build`, 0 errors).
+- **Files Created/Modified**:
+  - `frontend/src/*`, `frontend/package.json`, `frontend/vite.config.ts`, `frontend/index.html`
+  - `app/Http/Controllers/Api/OperationsController.php`
+  - `config/cors.php`, `routes/api.php`
+- **Definition of Done**: Frontend operational portal fully functional, responsive, type-checked, and passing production build.
+- **Handoff to Phase 5**: End-to-end user experience and backend connected, ready for reliability hardening.
 
 ---
 
