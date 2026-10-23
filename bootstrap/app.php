@@ -2,6 +2,7 @@
 
 error_reporting(E_ALL & ~E_DEPRECATED);
 
+use App\Console\Commands\ReconcileStalePolicies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withCommands([
-        \App\Console\Commands\ReconcileStalePolicies::class,
+        ReconcileStalePolicies::class,
     ])
     ->withMiddleware(function (Middleware $middleware) {
         // API and web middleware configurations

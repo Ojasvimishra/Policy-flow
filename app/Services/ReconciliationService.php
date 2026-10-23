@@ -24,7 +24,7 @@ class ReconciliationService
     /**
      * Run reconciliation over pending or uncertain requests.
      *
-     * @param int $limit Maximum number of records to process in one pass.
+     * @param  int  $limit  Maximum number of records to process in one pass.
      * @return array{
      *     examined: int,
      *     reconciled: int,

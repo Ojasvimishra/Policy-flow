@@ -16,7 +16,7 @@ class PolicyStateTransitionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new PolicyStateTransitionService();
+        $this->service = new PolicyStateTransitionService;
     }
 
     /**

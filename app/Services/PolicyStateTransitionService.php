@@ -134,7 +134,7 @@ class PolicyStateTransitionService
 
         $allowedTargets = self::TRANSITION_MATRIX[$fromState->value] ?? [];
 
-        if (!in_array($toState->value, $allowedTargets, true)) {
+        if (! in_array($toState->value, $allowedTargets, true)) {
             $allowedList = empty($allowedTargets) ? 'none (terminal)' : implode(', ', $allowedTargets);
             throw new InvalidStateTransitionException(
                 $fromStr,

@@ -1,17 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\HealthCheckController;
 use App\Http\Controllers\Api\MockInsurerCallbackController;
 use App\Http\Controllers\Api\MockInsurerController;
 use App\Http\Controllers\Api\OperationsController;
 use App\Http\Controllers\Api\PolicyRequestController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', function () {
-    return response()->json([
-        'status' => 'healthy',
-        'timestamp' => now()->toIso8601String(),
-    ]);
-});
+Route::get('/health', [HealthCheckController::class, 'check']);
 
 // Operational Dashboard Metrics & Reconciliation
 Route::get('/dashboard/metrics', [OperationsController::class, 'metrics']);

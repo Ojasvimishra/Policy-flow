@@ -1,0 +1,144 @@
+name: PolicyFlow CI / CD Quality Gate
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-verification:
+    name: Backend Test Suite (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.3']
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: policyflow_test
+          POSTGRES_USER: policyflow_user
+          POSTGRES_PASSWORD: secret_local_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U policyflow_user -d policyflow_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP Runtime
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: pdo, pdo_pgsql, pdo_mysql, bcmath, pcntl, redis, opcache
+          coverage: none
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Configure Testing Environment
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_DATABASE=policyflow/DB_DATABASE=policyflow_test/g' .env
+          sed -i 's/APP_ENV=local/APP_ENV=testing/g' .env
+
+      - name: Generate Application Key
+        run: php artisan key:generate
+
+      - name: Verify Code Formatting (Laravel Pint)
+        run: ./vendor/bin/pint --test
+
+      - name: Execute Database Migrations
+        run: php artisan migrate --force
+
+      - name: Run Backend PHPUnit Suite
+        run: php artisan test --colors=always
+
+  frontend-verification:
+    name: Frontend Test Suite & Production Build (Node 22)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22 Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Execute Frontend Vitest Suite
+        working-directory: frontend
+        run: npm test -- --run
+
+      - name: Compile TypeScript & Build Production Bundle
+        working-directory: frontend
+        run: npm run build
+
+      - name: Verify Built Asset Artifacts
+        working-directory: frontend
+        run: |
+          test -f dist/index.html || (echo "dist/index.html missing" && exit 1)
+          test -d dist/assets || (echo "dist/assets directory missing" && exit 1)
+          echo "Production frontend build verified successfully."
+
+  docker-verification:
+    name: Container Configuration & Compose Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Configurations
+        run: |
+          docker compose -f docker-compose.yml config --quiet || exit 1
+          # Verify production compose with dummy env file
+          cp .env.production.example .env.production
+          docker compose -f docker-compose.prod.yml config --quiet || exit 1
+          rm .env.production
+          echo "Docker Compose configurations verified successfully."

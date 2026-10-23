@@ -44,13 +44,9 @@ class PremiumCalculationService
     /**
      * Calculate the deterministic insurance premium and return an immutable snapshot.
      *
-     * @param string $planCode BASIC | PLUS | PREMIUM
-     * @param string|float|int $sumInsured 100000 | 300000 | 500000
-     * @param string $destination DOMESTIC | INTERNATIONAL
-     * @param string|DateTimeInterface $dateOfBirth
-     * @param string|DateTimeInterface $tripStart
-     * @param string|DateTimeInterface $tripEnd
-     * @return PricingSnapshot
+     * @param  string  $planCode  BASIC | PLUS | PREMIUM
+     * @param  string|float|int  $sumInsured  100000 | 300000 | 500000
+     * @param  string  $destination  DOMESTIC | INTERNATIONAL
      *
      * @throws InvalidArgumentException
      */
@@ -63,20 +59,20 @@ class PremiumCalculationService
         string|DateTimeInterface $tripEnd
     ): PricingSnapshot {
         $normalizedPlan = strtoupper(trim($planCode));
-        if (!isset(self::BASE_DAILY_RATES[$normalizedPlan])) {
-            throw new InvalidArgumentException("Unsupported plan code: '{$planCode}'. Allowed: " . implode(', ', array_keys(self::BASE_DAILY_RATES)));
+        if (! isset(self::BASE_DAILY_RATES[$normalizedPlan])) {
+            throw new InvalidArgumentException("Unsupported plan code: '{$planCode}'. Allowed: ".implode(', ', array_keys(self::BASE_DAILY_RATES)));
         }
         $baseDailyRate = self::BASE_DAILY_RATES[$normalizedPlan];
 
         $normalizedDestination = strtoupper(trim($destination));
-        if (!isset(self::DESTINATION_MULTIPLIERS[$normalizedDestination])) {
-            throw new InvalidArgumentException("Unsupported destination: '{$destination}'. Allowed: " . implode(', ', array_keys(self::DESTINATION_MULTIPLIERS)));
+        if (! isset(self::DESTINATION_MULTIPLIERS[$normalizedDestination])) {
+            throw new InvalidArgumentException("Unsupported destination: '{$destination}'. Allowed: ".implode(', ', array_keys(self::DESTINATION_MULTIPLIERS)));
         }
         $destinationMultiplier = self::DESTINATION_MULTIPLIERS[$normalizedDestination];
 
         $coverageKey = (string) (int) $sumInsured;
-        if (!isset(self::COVERAGE_MULTIPLIERS[$coverageKey])) {
-            throw new InvalidArgumentException("Unsupported sum insured: '{$sumInsured}'. Allowed: " . implode(', ', array_keys(self::COVERAGE_MULTIPLIERS)));
+        if (! isset(self::COVERAGE_MULTIPLIERS[$coverageKey])) {
+            throw new InvalidArgumentException("Unsupported sum insured: '{$sumInsured}'. Allowed: ".implode(', ', array_keys(self::COVERAGE_MULTIPLIERS)));
         }
         $coverageMultiplier = self::COVERAGE_MULTIPLIERS[$coverageKey];
 
@@ -196,7 +192,7 @@ class PremiumCalculationService
             $factorDecimals = strlen($decimalPart);
             $totalDecimals += $factorDecimals;
 
-            $intVal = (int) ($integerPart . $decimalPart);
+            $intVal = (int) ($integerPart.$decimalPart);
             $scaledResult *= $intVal;
         }
 
@@ -222,13 +218,14 @@ class PremiumCalculationService
 
         $relevantDecimals = substr($decimalPart, 0, $precision + 1);
         $checkDigit = (int) substr($relevantDecimals, $precision, 1);
-        $base = (int) ($integerPart . substr($decimalPart, 0, $precision));
+        $base = (int) ($integerPart.substr($decimalPart, 0, $precision));
 
         if ($checkDigit >= 5) {
             $base++;
         }
 
         $divisor = 10 ** $precision;
+
         return number_format($base / $divisor, $precision, '.', '');
     }
 

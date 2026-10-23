@@ -16,7 +16,7 @@ class PremiumCalculationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new PremiumCalculationService();
+        $this->service = new PremiumCalculationService;
     }
 
     /**

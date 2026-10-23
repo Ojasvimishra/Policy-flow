@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature\Intake;
 
 use App\Models\PolicyRequest;
-use App\Models\PolicyStateHistory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

@@ -7,7 +7,6 @@ namespace Tests\Feature\Issuance;
 use App\Enums\PolicyState;
 use App\Models\PolicyRequest;
 use App\Models\PolicyStateHistory;
-use App\Models\ProviderEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

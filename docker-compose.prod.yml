@@ -1,0 +1,182 @@
+version: '3.8'
+
+# ==============================================================================
+# PolicyFlow Production Docker Compose Architecture
+# ==============================================================================
+
+services:
+  # Edge Reverse Proxy & Static Asset Server
+  nginx:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    image: policyflow-frontend:latest
+    container_name: policyflow-prod-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - policyflow-prod-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Laravel 11 PHP-FPM Application Runtime
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: policyflow-backend:latest
+    container_name: policyflow-prod-app
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    volumes:
+      - app-storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - policyflow-prod-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Background Queue Worker (Redis Driver)
+  queue-worker:
+    image: policyflow-backend:latest
+    container_name: policyflow-prod-queue
+    restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+    env_file:
+      - .env.production
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--timeout=60", "--memory=128"]
+    volumes:
+      - app-storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    networks:
+      - policyflow-prod-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Background Scheduler (Reconciliation Daemon)
+  scheduler:
+    image: policyflow-backend:latest
+    container_name: policyflow-prod-scheduler
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    command: ["php", "artisan", "schedule:work"]
+    volumes:
+      - app-storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    networks:
+      - policyflow-prod-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Controlled Database Migration Runner (Zero Migration Races across Replicas)
+  migration:
+    image: policyflow-backend:latest
+    container_name: policyflow-prod-migration
+    profiles: ["migration"]
+    env_file:
+      - .env.production
+    command: ["php", "artisan", "migrate", "--force"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - policyflow-prod-network
+
+  # Production Relational Database: PostgreSQL 16 Alpine
+  db:
+    image: postgres:16-alpine
+    container_name: policyflow-prod-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-policyflow}
+      POSTGRES_USER: ${DB_USERNAME:-policyflow_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret_production_password}
+    volumes:
+      - pgdata-prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-policyflow_user} -d ${DB_DATABASE:-policyflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - policyflow-prod-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # In-Memory Cache, Session, & Queue Store: Redis 7 Alpine
+  redis:
+    image: redis:7-alpine
+    container_name: policyflow-prod-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-secret_redis_pass}"]
+    volumes:
+      - redisdata-prod:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-secret_redis_pass}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - policyflow-prod-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+volumes:
+  pgdata-prod:
+    name: policyflow-prod-pgdata
+  redisdata-prod:
+    name: policyflow-prod-redisdata
+  app-storage:
+    name: policyflow-prod-storage
+
+networks:
+  policyflow-prod-network:
+    name: policyflow-prod-network
+    driver: bridge

@@ -11,7 +11,9 @@ use Throwable;
 class InvalidStateTransitionException extends DomainException
 {
     protected string $fromState;
+
     protected string $toState;
+
     protected ?int $policyId;
 
     public function __construct(

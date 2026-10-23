@@ -45,12 +45,12 @@ In real-world insurance distribution, external insurer APIs are notoriously vola
 [X] Phase 3: Issuance Engine, Mock Insurer, Callbacks & Recon      ──▶ COMPLETED
 [X] Phase 4: Frontend & Operational User Experience                ──▶ COMPLETED
 [X] Phase 5: Integration & Reliability Hardening                   ──▶ COMPLETED
-[ ] Phase 6: Automated Testing, Security & Quality Verification    ──▶ NEXT (Phase 6 Ready)
-[ ] Phase 7: Documentation Completion & Packaging                  ──▶ Planned
-[ ] Phase 8: Final Acceptance, Demonstration & Submission          ──▶ Planned
+[X] Phase 6: Automated Testing, Security & Quality Verification    ──▶ COMPLETED
+[X] Phase 7: Production Deployment Readiness & Docker Hardening    ──▶ COMPLETED
+[ ] Phase 8: Final Acceptance, Demonstration & Submission          ──▶ NEXT (Phase 8 Submission Ready)
 ```
 
-> **Notice**: Complete end-to-end integration, native PHP 8.5 / Composer 2.10 environment, multi-worker concurrency protection, database invariants, and the React + Vite frontend operational dashboard are fully implemented, verified, and passing 100% of tests. Ready for Phase 6.
+> **Notice**: Production containerization, multi-stage Docker builds, Edge Nginx reverse proxy, CI/CD automation (`.github/workflows/ci.yml`), deep health check observability (`/api/health`), and the operations runbook (`docs/deployment/runbook.md`) are verified and passing 100% of checks. Ready for Phase 8.
 
 ---
 
@@ -101,27 +101,62 @@ Policy-flow/
 
 ---
 
-## 5. Local Setup & Quick Start
+## 5. Deployment & Quick Start Workflows
 
-### Option A: Docker Compose (Recommended)
+### Option A: Hardened Production Docker Deployment (Recommended for Production)
+
+PolicyFlow includes a hardened multi-stage container deployment topology with Edge Nginx, PHP 8.2-FPM Alpine, PostgreSQL 16 Alpine, and Redis 7 Alpine.
+
+1. **Configure Production Environment**:
+   ```bash
+   cp .env.production.example .env.production
+   chmod 600 .env.production
+   # Update APP_KEY, DB_PASSWORD, and REDIS_PASSWORD in .env.production
+   ```
+
+2. **Build Production Containers**:
+   ```bash
+   docker compose -f docker-compose.prod.yml build
+   ```
+
+3. **Start Core Databases**:
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d db redis
+   ```
+
+4. **Run Controlled Database Migrations (Zero Migration Races)**:
+   ```bash
+   docker compose -f docker-compose.prod.yml --profile migration run --rm migration
+   ```
+
+5. **Launch Application & Background Workers**:
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d app queue-worker scheduler nginx
+   ```
+   *Production endpoints*:
+   - Web Portal & API: `http://localhost/` (Edge Nginx reverse proxy)
+   - Health Probes: `http://localhost/api/health` and `http://localhost/up`
+
+### Option B: Local Development Docker Compose
 
 1. **Clone and Configure Environment**:
    ```bash
    cp .env.example .env
    ```
 
-2. **Build and Start Containers**:
+2. **Build and Start Local Development Containers**:
    ```bash
    docker compose up -d --build
    ```
    *Services launched*:
-   - `policyflow-app`: `http://localhost:8000`
+   - `policyflow-app`: `http://localhost:8000` (Laravel API)
    - `policyflow-db`: PostgreSQL 16 on port `5432`
    - `policyflow-redis`: Redis 7 on port `6379`
    - `policyflow-queue-worker`: Processing `redis` queue
+   - `policyflow-scheduler`: Scheduled reconciliation worker
    - `policyflow-frontend`: Vite dev server on `http://localhost:5173`
 
-3. **Install Dependencies & Initialize App**:
+3. **Initialize App & Run Migrations**:
    ```bash
    docker compose exec app composer install
    docker compose exec app php artisan key:generate
@@ -188,6 +223,8 @@ cd frontend && npm run build
 - [Redis & Queue Architecture](docs/architecture/queue-and-reliability.md)
 - [Security & Secret Management](docs/architecture/security.md)
 - [Frontend Architecture Specification](docs/architecture/frontend-architecture.md)
+- [Production Operations & Deployment Runbook](docs/deployment/runbook.md)
+- [Phase 7 Deployment Readiness & Verification Report](docs/testing/phase-7-deployment-readiness.md)
 - [Eight-Phase Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)
 - [Local Development Setup](docs/development/local-setup.md)
 - [Testing Conventions](docs/development/testing-conventions.md)

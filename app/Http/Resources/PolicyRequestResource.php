@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Enums\PolicyState;
 use App\Models\PolicyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -37,7 +38,7 @@ class PolicyRequestResource extends JsonResource
             'destination_multiplier' => $this->destination_multiplier,
             'coverage_multiplier' => $this->coverageMultiplier ?? $this->coverage_multiplier,
             'final_premium' => $this->final_premium,
-            'status' => $this->status instanceof \App\Enums\PolicyState ? $this->status->value : (string) $this->status,
+            'status' => $this->status instanceof PolicyState ? $this->status->value : (string) $this->status,
             'policy_number' => $this->policy_number,
             'provider_reference' => $this->provider_reference,
             'created_at' => $this->created_at?->toIso8601String(),

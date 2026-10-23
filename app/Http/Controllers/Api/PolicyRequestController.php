@@ -8,11 +8,11 @@ use App\Enums\PolicyState;
 use App\Http\Requests\StorePolicyRequest;
 use App\Http\Resources\PolicyRequestResource;
 use App\Models\PolicyRequest;
+use App\Services\IssuanceOrchestrator;
 use App\Services\PolicyIntakeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use App\Services\IssuanceOrchestrator;
 use Illuminate\Support\Facades\Validator;
 
 class PolicyRequestController extends Controller
@@ -82,7 +82,7 @@ class PolicyRequestController extends Controller
     public function index(Request $request): JsonResponse
     {
         $validator = Validator::make($request->query(), [
-            'status' => ['nullable', 'string', 'in:' . implode(',', PolicyState::values())],
+            'status' => ['nullable', 'string', 'in:'.implode(',', PolicyState::values())],
             'agent_id' => ['nullable', 'string', 'max:64'],
             'destination' => ['nullable', 'string', 'in:DOMESTIC,INTERNATIONAL'],
             'plan_code' => ['nullable', 'string', 'in:BASIC,PLUS,PREMIUM,basic,plus,premium'],
@@ -151,6 +151,7 @@ class PolicyRequestController extends Controller
             return response()->json($result, $httpCode);
         } catch (\DomainException $e) {
             $code = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 422;
+
             return response()->json([
                 'error' => [
                     'code' => 'SUBMISSION_ERROR',

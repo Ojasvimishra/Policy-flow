@@ -25,7 +25,7 @@ class ProviderCallbackService
     /**
      * Process an incoming webhook callback from an insurer provider.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
     public function processCallback(array $data): array
@@ -73,7 +73,6 @@ class ProviderCallbackService
                 $provider,
                 $eventId,
                 $eventType,
-                $clientRequestId,
                 $providerRef,
                 $policyNumber,
                 $rawPayload,

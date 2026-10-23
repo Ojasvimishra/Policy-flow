@@ -27,7 +27,7 @@ class PolicyIntakeService
      * Guarantees that repeated submissions with identical (agent_id, client_request_id)
      * return the original canonical record without recalculating or overwriting the premium snapshot.
      *
-     * @param array<string, mixed> $data Validated intake attributes
+     * @param  array<string, mixed>  $data  Validated intake attributes
      * @return array{policy: PolicyRequest, is_replay: bool, payload_mismatch: bool, snapshot: PricingSnapshot|null}
      */
     public function processIntake(array $data): array
@@ -142,9 +142,7 @@ class PolicyIntakeService
     /**
      * Detect if an incoming repeated submission has differing core parameters.
      *
-     * @param PolicyRequest $policy
-     * @param array<string, mixed> $data
-     * @return bool
+     * @param  array<string, mixed>  $data
      */
     protected function hasPayloadMismatch(PolicyRequest $policy, array $data): bool
     {

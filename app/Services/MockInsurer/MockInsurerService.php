@@ -17,16 +17,19 @@ use Illuminate\Support\Str;
 class MockInsurerService
 {
     public const SCENARIO_SUCCESS = 'SUCCESS';
+
     public const SCENARIO_TEMPORARY_FAILURE = 'TEMPORARY_FAILURE';
+
     public const SCENARIO_TIMEOUT_AFTER_ISSUE = 'TIMEOUT_AFTER_ISSUE';
+
     public const SCENARIO_DELAYED_CALLBACK = 'DELAYED_CALLBACK';
+
     public const SCENARIO_DUPLICATE_CALLBACK = 'DUPLICATE_CALLBACK';
 
     /**
      * Process an issuance request under a specified deterministic scenario.
      *
-     * @param array<string, mixed> $payload
-     * @param string $scenario
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      *
      * @throws InsurerTemporaryFailureException
@@ -114,9 +117,6 @@ class MockInsurerService
 
     /**
      * Retrieve provider issuance status for reconciliation.
-     *
-     * @param string $clientRequestId
-     * @return MockInsurerPolicy|null
      */
     public function getStatus(string $clientRequestId): ?MockInsurerPolicy
     {
@@ -126,9 +126,6 @@ class MockInsurerService
     /**
      * Generate a deterministic webhook payload for callback testing.
      *
-     * @param string $clientRequestId
-     * @param string $eventId
-     * @param string $eventType
      * @return array<string, mixed>
      */
     public function buildCallbackPayload(
@@ -138,9 +135,9 @@ class MockInsurerService
     ): array {
         $policy = $this->getStatus($clientRequestId);
 
-        $id = $eventId !== '' ? $eventId : 'EVT-MOCK-' . strtoupper(Str::random(10));
-        $polNumber = $policy?->policy_number ?? ('POL-MOCK-' . strtoupper(Str::random(8)));
-        $provRef = $policy?->provider_reference ?? ('PRV-MOCK-' . strtoupper(Str::random(12)));
+        $id = $eventId !== '' ? $eventId : 'EVT-MOCK-'.strtoupper(Str::random(10));
+        $polNumber = $policy?->policy_number ?? ('POL-MOCK-'.strtoupper(Str::random(8)));
+        $provRef = $policy?->provider_reference ?? ('PRV-MOCK-'.strtoupper(Str::random(12)));
 
         return [
             'provider' => 'mock_insurer',
@@ -174,9 +171,9 @@ class MockInsurerService
         }
 
         // Generate stable, unique policy numbers and provider references
-        $hash = substr(md5($clientRequestId . $agentId), 0, 8);
-        $policyNumber = 'POL-MOCK-' . strtoupper($hash);
-        $providerRef = 'PRV-' . strtoupper(Str::random(12));
+        $hash = substr(md5($clientRequestId.$agentId), 0, 8);
+        $policyNumber = 'POL-MOCK-'.strtoupper($hash);
+        $providerRef = 'PRV-'.strtoupper(Str::random(12));
 
         return MockInsurerPolicy::create([
             'client_request_id' => $clientRequestId,

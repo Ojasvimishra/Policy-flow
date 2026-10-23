@@ -7,7 +7,6 @@ namespace App\Services;
 use App\Enums\PolicyState;
 use App\Exceptions\InsurerTemporaryFailureException;
 use App\Exceptions\InsurerTimeoutException;
-use App\Exceptions\InvalidStateTransitionException;
 use App\Models\IssuanceAttempt;
 use App\Models\PolicyRequest;
 use App\Models\PolicyStateHistory;
@@ -30,8 +29,7 @@ class IssuanceOrchestrator
     /**
      * Submit a policy request for issuance.
      *
-     * @param int|string $policyId
-     * @param string|null $scenario Test scenario override (e.g. TIMEOUT_AFTER_ISSUE)
+     * @param  string|null  $scenario  Test scenario override (e.g. TIMEOUT_AFTER_ISSUE)
      * @return array<string, mixed>
      */
     public function submit(int|string $policyId, ?string $scenario = null): array
@@ -104,7 +102,7 @@ class IssuanceOrchestrator
                 'from_state' => $fromState->value,
                 'to_state' => PolicyState::SUBMITTED->value,
                 'trigger' => 'SUBMIT_FOR_ISSUANCE',
-                'reason' => 'Dispatched to insurer (attempt #' . $lockedPolicy->attempt_count . ')',
+                'reason' => 'Dispatched to insurer (attempt #'.$lockedPolicy->attempt_count.')',
             ]);
 
             return IssuanceAttempt::create([
@@ -130,6 +128,7 @@ class IssuanceOrchestrator
         if ($attempt === null) {
             // Concurrency catch: Was issued during lock
             $fresh = $policy->fresh();
+
             return [
                 'success' => true,
                 'status' => PolicyState::ISSUED->value,
@@ -200,7 +199,7 @@ class IssuanceOrchestrator
                     'from_state' => $fromState->value,
                     'to_state' => PolicyState::ISSUED->value,
                     'trigger' => 'PROVIDER_ISSUANCE_SUCCESS',
-                    'reason' => 'Successfully issued with policy number: ' . $providerResult['policy_number'],
+                    'reason' => 'Successfully issued with policy number: '.$providerResult['policy_number'],
                 ]);
 
                 return [
@@ -238,7 +237,7 @@ class IssuanceOrchestrator
                     'from_state' => $fromState->value,
                     'to_state' => PolicyState::PENDING_CONFIRMATION->value,
                     'trigger' => 'PROVIDER_SOCKET_TIMEOUT',
-                    'reason' => 'Timeout after submission: ' . $e->getMessage() . '. Transitioned to PENDING_CONFIRMATION for reconciliation.',
+                    'reason' => 'Timeout after submission: '.$e->getMessage().'. Transitioned to PENDING_CONFIRMATION for reconciliation.',
                 ]);
 
                 return [

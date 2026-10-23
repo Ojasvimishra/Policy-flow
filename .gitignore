@@ -8,6 +8,13 @@
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore
 /storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
 .env
 .env.backup
 .env.production
