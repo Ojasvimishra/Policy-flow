@@ -63,7 +63,8 @@ This roadmap formalizes the end-to-end engineering plan for **PolicyFlow**, a fa
 
 ---
 
-## Phase 2: Policy Intake, Validation, Premium Calculation & Idempotency
+## Phase 2: Policy Intake, Validation, Premium Calculation & Idempotency [COMPLETED]
+- **Status**: Completed & Verified (Commit `Phase 2`)
 - **Objective**: Implement the REST API intake endpoint, input validation, deterministic decimal-safe pricing rules, and atomic duplicate intake protection.
 - **Scope**:
   - `POST /api/policy-requests` endpoint.

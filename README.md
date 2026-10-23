@@ -41,8 +41,8 @@ In real-world insurance distribution, external insurer APIs are notoriously vola
 ```
 [X] Phase 0: Project Foundation, Architecture & Environment Setup  ──▶ COMPLETED
 [X] Phase 1: Database Implementation & Domain Core                 ──▶ COMPLETED
-[ ] Phase 2: Policy Intake, Validation, Pricing & Idempotency      ──▶ NEXT (Backlog Ready)
-[ ] Phase 3: Issuance Engine, Mock Insurer, Callbacks & Recon      ──▶ Planned
+[X] Phase 2: Policy Intake, Validation, Pricing & Idempotency      ──▶ COMPLETED
+[ ] Phase 3: Issuance Engine, Mock Insurer, Callbacks & Recon      ──▶ NEXT (Backlog Ready)
 [ ] Phase 4: Frontend & Operational User Experience                ──▶ Planned
 [ ] Phase 5: Integration & Reliability Hardening                   ──▶ Planned
 [ ] Phase 6: Automated Testing, Security & Quality Verification    ──▶ Planned
@@ -50,7 +50,7 @@ In real-world insurance distribution, external insurer APIs are notoriously vola
 [ ] Phase 8: Final Acceptance, Demonstration & Submission          ──▶ Planned
 ```
 
-> **Notice**: Database migrations, Eloquent models, state machine enum, `PolicyStateTransitionService`, and automated schema constraint tests are implemented and verified. Ready for Phase 2.
+> **Notice**: Deterministic pricing engine, intake validation, immutable pricing snapshot persistence, and atomic intake idempotency are implemented and verified. Ready for Phase 3.
 
 ---
 
