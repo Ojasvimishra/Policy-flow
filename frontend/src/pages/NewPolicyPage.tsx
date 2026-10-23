@@ -406,20 +406,24 @@ export const NewPolicyPage: React.FC = () => {
 
           {/* Right Column: Live Dynamic Pricing Breakdown Panel */}
           <div>
-            <PremiumBreakdown estimate={estimate} isAuthoritative={false} />
+            <PremiumBreakdown
+              estimate={estimate}
+              isAuthoritative={false}
+              selectedPlan={planCode}
+              selectedDestination={destination}
+              selectedSumInsured={sumInsured}
+            />
 
             <div
               className="card"
               style={{
-                marginTop: '1.5rem',
+                marginTop: '1.25rem',
                 backgroundColor: 'var(--color-surface)',
                 border: '1px solid var(--color-border)',
               }}
             >
-              <div className="card-body" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-                <strong>Idempotency Assurance:</strong> The composite key <code>(agent_id, client_request_id)</code> is
-                atomically enforced by PostgreSQL / MySQL. Submitting identical credentials repeatedly returns the canonical
-                record with zero duplicate calculations.
+              <div className="card-body" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                <strong>Idempotency Safeguard:</strong> Compound identity <code>(agent_id, client_request_id)</code> ensures repeated submissions return the existing policy without double-billing.
               </div>
             </div>
           </div>

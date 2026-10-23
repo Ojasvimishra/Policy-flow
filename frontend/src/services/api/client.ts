@@ -37,11 +37,27 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
     const data = isJson ? await response.json() : await response.text();
 
     if (!response.ok) {
+      let message = (typeof data === 'object' && data !== null)
+        ? (data.error?.message || data.message)
+        : undefined;
+
+      if (!message) {
+        if (response.status === 502) {
+          message = 'The backend service is currently unreachable (502 Bad Gateway). Verify the Laravel server is running.';
+        } else if (response.status === 503) {
+          message = 'Service temporarily unavailable (503). Please retry in a moment.';
+        } else if (response.status === 504) {
+          message = 'Gateway timeout (504). The server took too long to respond.';
+        } else {
+          message = response.statusText || 'Request failed.';
+        }
+      }
+
       const error: ApiError = {
-        code: data?.error?.code || data?.code || `HTTP_${response.status}`,
-        message: data?.error?.message || data?.message || response.statusText || 'Request failed.',
+        code: (typeof data === 'object' && data !== null && (data.error?.code || data.code)) || `HTTP_${response.status}`,
+        message,
         status: response.status,
-        fields: data?.error?.fields || data?.errors || undefined,
+        fields: (typeof data === 'object' && data !== null && (data.error?.fields || data.errors)) || undefined,
       };
       throw error;
     }

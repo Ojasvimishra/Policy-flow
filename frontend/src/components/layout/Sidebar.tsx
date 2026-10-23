@@ -88,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="sidebar-footer">
           <div>PolicyFlow Engine v1.0</div>
           <div style={{ color: 'var(--color-primary)', fontWeight: 500, marginTop: '0.2rem' }}>
-            Phase 4: Operations Portal
+            TrippersShield Operations
           </div>
         </div>
       </aside>
